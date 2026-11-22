@@ -7,3 +7,6 @@ def sample():
 @pytest.fixture
 def clean():
     return evaluate({'dataset':'clean'})
+@pytest.fixture
+def midday():
+    return evaluate({'dataset':'midday'})

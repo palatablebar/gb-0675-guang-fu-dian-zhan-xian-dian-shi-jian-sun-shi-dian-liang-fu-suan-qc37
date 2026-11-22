@@ -1,10 +1,10 @@
 from decimal import Decimal
 from app.coerce import number,instant
 
-def estimate(segment,records,context):
+def reference_baseline(segment,records,context):
+    # 仅由对照逆变器估计目标应发基线，不看目标自身状态与功率；
+    # 限额分摊据此为故障设备估计应发，再扣停运得到可发。
     base={**segment,'baseline_kw':None,'reference_ids':[]}
-    if segment['actual_kw'] is None:return {**base,'code':'TARGET_GAP'}
-    if segment['status']!='健康':return {**base,'code':'TARGET_FAULT'}
     target=context['devices'][segment['device']];width=number(context['irradiance_bin']);target_bin=number(segment['irradiance'])//width
     references=[]
     for row in records:
@@ -20,6 +20,12 @@ def estimate(segment,records,context):
     ratios=sorted(x[0] for x in references);mid=len(ratios)//2;ratio=ratios[mid] if len(ratios)%2 else (ratios[mid-1]+ratios[mid])/2
     baseline=min(number(target['capacity_kw']),ratio*number(target['capacity_kw']))
     return {**base,'baseline_kw':str(baseline),'reference_ids':sorted(x[1] for x in references),'code':'ESTIMATED'}
+
+def estimate(segment,records,context):
+    base={**segment,'baseline_kw':None,'reference_ids':[]}
+    if segment['actual_kw'] is None:return {**base,'code':'TARGET_GAP'}
+    if segment['status']!='健康':return {**base,'code':'TARGET_FAULT'}
+    return reference_baseline(segment,records,context)
 
 def apply(state):
     estimates=[estimate(s,state['records'],state['context']) for s in state['segments']];state['estimates']=estimates

@@ -7,4 +7,4 @@ def page(request:Request):
     return render(request,'loss')
 @router.post('/api/loss')
 def calculate(payload:dict=Body(default={})):
-    return evaluate(payload,until=5)
+    return evaluate(payload,until=6)
